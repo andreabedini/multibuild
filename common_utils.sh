@@ -14,9 +14,17 @@ set -e
 MULTIBUILD_DIR=$(dirname "${BASH_SOURCE[0]}")
 if [ $(uname) == "Darwin" ]; then IS_OSX=1; fi
 
+function is_function {
+    # Echo "true" if input argument string is a function
+    # Allow errors during "set -e" blocks.
+    (set +e; echo $($(declare -Ff "$1") > /dev/null && echo true))
+}
+
 # Work round bug in travis xcode image described at
 # https://github.com/direnv/direnv/issues/210
-shell_session_update() { :; }
+if [ -z "$(is_function "shell_session_update")" ]; then
+    shell_session_update() { :; }
+fi
 
 function abspath {
     python -c "import os.path; print(os.path.abspath('$1'))"
@@ -49,12 +57,6 @@ function unlex_ver {
 
 function strip_ver_suffix {
     echo $(unlex_ver $(lex_ver $1))
-}
-
-function is_function {
-    # Echo "true" if input argument string is a function
-    # Allow errors during "set -e" blocks.
-    (set +e; echo $($(declare -Ff "$1") > /dev/null && echo true))
 }
 
 function gh-clone {
